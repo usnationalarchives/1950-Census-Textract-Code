@@ -1,5 +1,5 @@
 # 1950 Census Textract Script
-Custom Amazon Textract script to extract name data from the 1950 Census records images.
+Custom Amazon Textract script to extract name data from the 1950 Census records.
 The script uses the AWS Textract service to extract the text and utilize Serverless solution to spin
 up hundreds of processes to process the images in parallel.
 
