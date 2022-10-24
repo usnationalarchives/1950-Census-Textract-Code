@@ -1,0 +1,8 @@
+**/__pycache__/**
+/data/**
+/output/**
+/debug/**
+/log/**
+/dependencies
+/.serverless
+.vscode/**

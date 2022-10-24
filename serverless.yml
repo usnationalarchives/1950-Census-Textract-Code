@@ -1,0 +1,68 @@
+# serverless.yml
+
+service: Textractgc
+
+provider:
+  name: aws
+  runtime: python3.8
+  stage: dev
+  region: us-gov-east-1
+  memorySize: 700
+  logRetentionInDays: 30
+  lambdaHashingVersion: 20201221 #set harsh version to avoid warning
+  versionFunctions: false # Optional function versioning
+  environment:
+    BUCKET_SRC: 'nara-census-jpg-prod-gc'
+    BUCKET_DST: 'nara-textract-gc'
+    REGION: 'us-gov-east-1'
+
+layers:
+  Python:
+    path: dependencies
+    description: Python env
+    compatibleRuntimes:
+      - python3.8   
+    package:
+      artifact: dependencies.zip
+package:
+  patterns:
+    - '!**'  
+    - './src/**'
+    - './handler.py'
+    - '!./src/__pycache__/**'
+    - '!./src/tmp/**'
+
+
+functions:
+  textract:
+    handler: handler.textract
+    reservedConcurrency: 100
+    timeout: 900
+    events:
+      - sqs:
+          batchSize: 10
+          maximumBatchingWindow: 2          
+          arn:
+            Fn::GetAtt:
+              - TextractQueue
+              - Arn
+    layers:
+      - Ref: PythonLambdaLayer
+    
+    vpc:
+      securityGroupIds:
+        - sg-093533cfa782a6c56
+      subnetIds:
+        - subnet-039f9f66e6f8c148b
+        - subnet-026379b7d4054d6b0
+        - subnet-062825a9a2293f128
+
+resources:
+  Resources:
+    TextractQueue:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: "TextractQueue"
+        MessageRetentionPeriod: 1209600 # set retention period to 14 days (max 14 days on AWS, default 4 days)
+        VisibilityTimeout: 901  #need to be equal and bigger than timeout
+        DelaySeconds: 2
